@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Javascript application with PKCE</title>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 
 <script language="javascript">
 function generateState(length) {
@@ -54,7 +54,7 @@ function getAuthCode() {
     var state = document.getElementById("stateValue").innerHTML;
     var codeChallenge = document.getElementById("codeChallengeValue").innerHTML;
 
-    var authorizationURL = "http://localhost:8000/auth/realms/appsdeveloperblog/protocol/openid-connect/auth";
+    var authorizationURL = "http://localhost:8000/realms/appsdeveloperblog/protocol/openid-connect/auth";
     authorizationURL += "?client_id=photo-app-PKCE-client";
     authorizationURL += "&response_type=code";
     authorizationURL += "&scope=openid";
@@ -67,20 +67,29 @@ function getAuthCode() {
 }
 
 function postAuthorize(state, authCode) {
-	var originalStateValue = document.getElementById("stateValue").innerHTML;
-	
+    //alert("State: " + state + "\nauthCode: " + authCode);
+
+    state = state  + '';  //force convert to string by  + ''
+	var originalStateValue = document.getElementById("stateValue").innerHTML + '';
+
+	//alert("state: " + state + "\noriginalStateValue: " + originalStateValue);
+
 	if(state === originalStateValue) {
+	    //alert("state: " + state + "\noriginalStateValue: " + originalStateValue);
 		requestTokens(authCode);
 	} else {
 		alert("Invalid state value received");
-	} 
+	}
+
 }
 
 function requestTokens(authCode) {
+    alert("requestTokens(authCode): " + authCode);
     var codeVerifier = document.getElementById("codeVerifierValue").innerHTML;
     var data = {
         "grant_type": "authorization_code",
         "client_id": "photo-app-PKCE-client",
+        "client_secret": "1ELQVUPVLPx66Py1jqSIBtBIT1BUJCag",
         "code": authCode,
         "code_verifier": codeVerifier,
         "redirect_uri":"http://localhost:8181/authcodeReader.html"
@@ -91,35 +100,45 @@ function requestTokens(authCode) {
             request.setRequestHeader("Content-type", "application/x-www-form-urlencoded; charset=UTF-8");
         },
         type: "POST",
-        url: "http://localhost:8000/auth/realms/appsdeveloperblog/protocol/openid-connect/token",
+        url: "http://localhost:8000/realms/appsdeveloperblog/protocol/openid-connect/token",
         data: data,
         success: postRequestAccessToken,
+        error: function (request, status, error) {
+            alert(request.responseText);
+        },
         dataType: "json"
     });
 }
 
 function postRequestAccessToken(data, status, jqXHR) {
+    //alert("data:" + (data + '') + ", status:" + (status + ''));
+
     document.getElementById("accessToken").innerHTML = data["access_token"];
 }
 
 function getInfoFromResourceServer(){
 	 
-    var accessToken = document.getElementById("accessToken").innerHTML;
+    var accessToken = document.getElementById("accessToken").innerHTML + '';
+    //alert("getInfoFromResourceServer accessToken: " + accessToken);
 
     $.ajax({
         beforeSend: function (request) {
             request.setRequestHeader("Content-type", "application/x-www-form-urlencoded; charset=UTF-8");
             request.setRequestHeader("Authorization", "Bearer " + accessToken);
+            //request.setRequestHeader("Access-Control-Allow-Origin", "http://localhost:8082");
         },
         type: "GET",
         url: "http://localhost:8082/users/status/check",
         success: postInfoFromAccessToken,
+        error: function (request, status, error) {
+            alert("getInfoFromResourceServer error: " + request.responseText + "\nError: " + (error + '') + "\nStatus: " + (status + ''));
+        },
         dataType: "text"
     });
 }
 
 function postInfoFromAccessToken(data, status, jqXHR) {
-    alert(data);
+    alert("postInfoFromAccessToken: " + (data + ''));
 }
 
 </script>
@@ -139,10 +158,10 @@ function postInfoFromAccessToken(data, status, jqXHR) {
 <br/>
 <div><input type="button" value="Get Auth Code" onclick="getAuthCode()"/></div>
 
- <p>Access token: <span id="accessToken"></span></p>
+<p>Access token: <span id="accessToken"></span></p>
 
-  <br/>
-  <div><input type="button" value="Load" onclick="getInfoFromResourceServer()"/></div>
+<br/>
+<div><input type="button" value="Get Info From Resource Server" onclick="getInfoFromResourceServer()"/></div>
 
 </body>
 </html>
