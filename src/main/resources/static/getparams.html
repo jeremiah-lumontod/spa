@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Get Params</title>
+</head>
+<body>
+
+        <script type="text/javascript">
+            //how to call: http://localhost:8181/getparams.html?username=user&password=pass
+            var urlParams = new URLSearchParams(window.location.search);
+            var username = urlParams.get('username'),
+                    password = urlParams.get('password');
+
+            window.alert("username:" +  username + ", password:" + password);
+
+        </script>
+
+
+</body>
+</html>
